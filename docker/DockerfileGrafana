@@ -1,0 +1,10 @@
+FROM grafana/grafana:latest
+
+COPY ../config/grafana.ini /etc/grafana/grafana.ini
+COPY ../config/provisioning /etc/grafana/provisioning
+COPY ../config/dashboards /var/lib/grafana/dashboards
+COPY ../config/recording_rules.yml /etc/prometheus/recording_rules.yml
+
+EXPOSE 8004
+
+CMD ["grafana-server", "--homepath=/usr/share/grafana", "--config=/etc/grafana/grafana.ini"]

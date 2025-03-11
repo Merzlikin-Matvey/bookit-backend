@@ -1,0 +1,8 @@
+FROM minio/minio:latest
+
+EXPOSE 8003
+
+ENV MINIO_SERVER_URL="http://localhost:8003"
+ENV MINIO_BROWSER_REDIRECT_URL="http://localhost:8003/ui"
+
+CMD ["server", "--address", ":8003", "--console-address", ":9001", "/data"]

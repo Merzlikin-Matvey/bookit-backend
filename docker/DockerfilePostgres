@@ -1,0 +1,15 @@
+FROM postgres:latest
+
+# Use ARG to allow passing environment variables from docker-compose
+ARG POSTGRES_PASSWORD
+ARG POSTGRES_USER
+ARG POSTGRES_DB
+
+# Set environment variables using the ARG values
+ENV POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+ENV POSTGRES_USER=${POSTGRES_USER:-user}
+ENV POSTGRES_DB=${POSTGRES_DB:-db}
+
+EXPOSE 8001
+
+CMD ["postgres", "-p", "8001"]

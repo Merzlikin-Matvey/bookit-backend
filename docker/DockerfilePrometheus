@@ -1,0 +1,5 @@
+FROM prom/prometheus:latest
+
+EXPOSE 8005
+
+CMD ["--web.listen-address=:8005", "--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.path=/prometheus"]

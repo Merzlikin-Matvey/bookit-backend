@@ -1,0 +1,23 @@
+groups:
+- name: booking_rules
+  rules:
+  - record: user_registrations_total_record
+    expr: sum(user_registrations_total)
+  - record: api_errors_total_record
+    expr: sum without (endpoint)(api_errors_total)
+  - record: booking_total
+    expr: sum(bookings_total)
+  - record: booking_average_time_seconds
+    expr: avg(average_booking_time_seconds)
+  - record: user_registrations_total_1m
+    expr: sum(increase(user_registrations_total[1m]))
+  - record: user_logins_total_1m
+    expr: sum(increase(user_logins_total[1m]))
+  - record: user_active_users_1m
+    expr: avg_over_time(active_users[1m])
+  - record: api_errors_total_1m
+    expr: sum without (endpoint)(increase(api_errors_total[1m]))
+  - record: booking_total_1m
+    expr: sum(increase(bookings_total[1m]))
+  - record: booking_average_time_seconds_1m
+    expr: avg_over_time(average_booking_time_seconds[1m])

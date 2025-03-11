@@ -1,0 +1,5 @@
+FROM redis:latest
+
+EXPOSE 8002
+
+CMD ["redis-server", "--port", "8002"]

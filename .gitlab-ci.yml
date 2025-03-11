@@ -1,0 +1,27 @@
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  image: alpine:latest
+
+  before_script:
+    - apk add --no-cache openssh-client rsync bash coreutils
+    - mkdir -p ~/.ssh
+    - echo "$ENV_PRIVATE_KEY_BASE64" | base64 -d > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - eval $(ssh-agent -s)
+    - ssh-add ~/.ssh/id_rsa
+    - ssh-keyscan -H "$ENV_SSH_HOST" >> ~/.ssh/known_hosts
+
+  script:
+    - |
+      rsync -avz --no-times --exclude='.git' --exclude='.gitlab-ci.yml' ./ "$ENV_SSH_USER@$ENV_SSH_HOST:/home/lokalkateam/back"
+      ssh "$ENV_SSH_USER@$ENV_SSH_HOST" << EOF
+        cd /home/lokalkateam/back
+        sudo docker compose down
+        sudo -E docker compose up -d --build
+      EOF
+
+  only:
+    - master
