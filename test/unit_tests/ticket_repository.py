@@ -11,7 +11,6 @@ from server.schemas.ticket import TicketThemeEnum
 
 @pytest.fixture
 def mock_db():
-    """Create a mock AsyncSession"""
     db = AsyncMock(spec=AsyncSession)
     execute_result = MagicMock()
     scalars_result = MagicMock()
@@ -29,7 +28,6 @@ def mock_db():
 
 @pytest.fixture
 def mock_ticket():
-    """Create a mock Ticket object"""
     ticket = MagicMock()
     ticket.id = uuid4()
     ticket.user_id = str(uuid4())
@@ -46,7 +44,6 @@ class TestTicketRepository:
 
     @pytest.mark.asyncio
     async def test_create_ticket(self, mock_db):
-        """Test creating a new ticket"""
         repo = TicketRepository(mock_db)
         user_id = str(uuid4())
         seat_name = "Test Seat"
@@ -75,7 +72,6 @@ class TestTicketRepository:
 
     @pytest.mark.asyncio
     async def test_get_ticket_by_id(self, mock_db, mock_ticket):
-        """Test retrieving a ticket by ID"""
         repo = TicketRepository(mock_db)
         ticket_id = mock_ticket.id
         mock_db.get.return_value = mock_ticket
@@ -87,7 +83,6 @@ class TestTicketRepository:
 
     @pytest.mark.asyncio
     async def test_get_tickets(self, mock_db, mock_ticket):
-        """Test retrieving all tickets"""
         repo = TicketRepository(mock_db)
         mock_tickets = [mock_ticket, MagicMock(), MagicMock()]
         mock_db.execute.return_value = mock_tickets
@@ -99,7 +94,6 @@ class TestTicketRepository:
 
     @pytest.mark.asyncio
     async def test_update_ticket_status(self, mock_db, mock_ticket):
-        """Test updating a ticket's status"""
         repo = TicketRepository(mock_db)
         ticket_id = mock_ticket.id
         new_status = "resolved"
@@ -114,7 +108,6 @@ class TestTicketRepository:
 
     @pytest.mark.asyncio
     async def test_get_user_tickets(self, mock_db, mock_ticket):
-        """Test retrieving tickets for a specific user"""
         repo = TicketRepository(mock_db)
         user_id = mock_ticket.user_id
         user_tickets = [mock_ticket, MagicMock()]
@@ -127,7 +120,6 @@ class TestTicketRepository:
 
     @pytest.mark.asyncio
     async def test_get_unanswered_tickets(self, mock_db, mock_ticket):
-        """Test retrieving unanswered tickets"""
         repo = TicketRepository(mock_db)
         mock_ticket.status = None
         unanswered_tickets = [mock_ticket, MagicMock()]

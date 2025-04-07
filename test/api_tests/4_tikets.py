@@ -13,9 +13,7 @@ RESERVATIONS_URL = f"{BASE_URL}/reservations"
 
 
 class TestTicketsAPI:
-
     def setup_method(self):
-        """Настройка для каждого теста"""
         self.admin_session = requests.Session()
         self.user1_session = requests.Session()
         self.user2_session = requests.Session()
@@ -32,18 +30,15 @@ class TestTicketsAPI:
             "message": "Тестовый тикет - проблема с компьютером"
         }
         
-        # Обновим данные для создания тикета с реальным reservation_id позже
         self.reservation_ticket_data = {
             "theme": "other",
             "message": "Тестовый тикет по бронированию"
-            # reservation_id будет добавлен после создания реального бронирования
         }
         
         self.updated_status = {
             "status": "closed"
         }
         
-        # Данные для создания тестового бронирования
         self.reservation_data = {
             "user_id": str(USER_IDS["user1"]),
             "seat_id": str(SEAT_IDS["seat1"]),
@@ -51,17 +46,14 @@ class TestTicketsAPI:
             "end": self.tomorrow.replace(hour=18, minute=0).isoformat()
         }
         
-        # Очистим все бронирования пользователя перед тестами
         self._cancel_all_user_reservations()
 
     def teardown_method(self):
-        """Очистка после каждого теста"""
         self.admin_session.close()
         self.user1_session.close()
         self.user2_session.close()
 
     def login_as_admin(self):
-        """Авторизация как админ"""
         admin_login = {
             "email": self.admin_user["email"],
             "password": self.admin_user["password"]
@@ -71,7 +63,6 @@ class TestTicketsAPI:
         return self.admin_session
 
     def login_as_user1(self):
-        """Авторизация как пользователь 1"""
         user_login = {
             "email": self.user1["email"],
             "password": self.user1["password"]
@@ -81,7 +72,6 @@ class TestTicketsAPI:
         return self.user1_session
 
     def login_as_user2(self):
-        """Авторизация как пользователь 2"""
         user_login = {
             "email": self.user2["email"],
             "password": self.user2["password"]
@@ -91,7 +81,6 @@ class TestTicketsAPI:
         return self.user2_session
 
     def _create_test_reservation(self):
-        """Создаём тестовое бронирование и возвращаем его ID"""
         user_session = self.login_as_user1()
         response = user_session.post(RESERVATIONS_URL, json=self.reservation_data)
         assert response.status_code == 201, f"Не удалось создать бронирование: {response.text}"
@@ -99,7 +88,6 @@ class TestTicketsAPI:
         return reservation_data["id"]
     
     def _cancel_all_user_reservations(self):
-        """Отменяем все активные бронирования пользователя"""
         user_session = self.login_as_user1()
         response = user_session.get(RESERVATIONS_URL)
         if response.status_code == 200:
@@ -113,7 +101,6 @@ class TestTicketsAPI:
                     assert cancel_response.status_code == 200, f"Не удалось отменить бронирование: {cancel_response.text}"
 
     def test_create_ticket(self):
-        """Тест создания тикета пользователем"""
         user_session = self.login_as_user1()
         
         response = user_session.post(TICKETS_URL, json=self.ticket_data)
@@ -131,7 +118,6 @@ class TestTicketsAPI:
         return data["id"]
 
     def test_create_ticket_with_reservation(self):
-        """Тест создания тикета, связанного с бронированием"""
         user_session = self.login_as_user1()
         
         reservation_id = self._create_test_reservation()
@@ -154,7 +140,6 @@ class TestTicketsAPI:
         return data["id"]
     
     def test_create_ticket_wish_theme(self):
-        """Тест создания тикета с темой 'wish'"""
         user_session = self.login_as_user1()
         
         wish_ticket = {
@@ -173,7 +158,6 @@ class TestTicketsAPI:
         return data["id"]
 
     def test_get_user_tickets(self):
-        """Тест получения тикетов текущего пользователя"""
         user_session = self.login_as_user1()
     
         self.test_create_ticket()
@@ -198,8 +182,6 @@ class TestTicketsAPI:
         assert first_ticket["user_id"] == str(USER_IDS["user1"])
 
     def test_admin_get_all_tickets(self):
-        """Тест получения всех тикетов администратором"""
-        
         user1_session = self.login_as_user1()
         user1_ticket_data = {
             "theme": "failure",
@@ -232,7 +214,6 @@ class TestTicketsAPI:
         assert len(user2_tickets) > 0, "Должен быть хотя бы один тикет от пользователя 2"
 
     def test_admin_update_ticket_status(self):
-        """Тест обновления статуса тикета администратором"""
         user_session = self.login_as_user1()
         create_response = user_session.post(TICKETS_URL, json=self.ticket_data)
         assert create_response.status_code == 200
@@ -255,8 +236,6 @@ class TestTicketsAPI:
         assert updated_ticket["status"] == "closed", "Статус тикета не обновился на 'closed'"
 
     def test_user_cannot_update_ticket_status(self):
-        """Тест, что обычный пользователь не может обновить статус тикета"""
-
         user1_session = self.login_as_user1()
         create_response = user1_session.post(TICKETS_URL, json=self.ticket_data)
         assert create_response.status_code == 200
@@ -269,8 +248,6 @@ class TestTicketsAPI:
         assert update_response.status_code in [401, 403], f"Код ответа {update_response.status_code}, ожидался 401 или 403. Ответ: {update_response.text}"
 
     def test_user_cannot_see_others_tickets(self):
-        """Тест, что пользователь не может видеть тикеты других пользователей"""
-
         user1_session = self.login_as_user1()
         user1_ticket_data = {
             "theme": "failure",
@@ -293,7 +270,6 @@ class TestTicketsAPI:
             assert data["id"] != user1_ticket_id, "Пользователь 2 не должен видеть тикеты пользователя 1"
 
     def test_create_ticket_invalid_theme(self):
-        """Тест создания тикета с недопустимой темой"""
         user_session = self.login_as_user1()
         
         invalid_ticket = {

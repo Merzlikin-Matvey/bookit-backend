@@ -16,7 +16,7 @@ from server.schemas.user import UserUpdateAdmin, UserOut
 from server.utils.exceptions import SeatIsNotAvailableError, UserAlreadyHasActiveReservationError
 
 
-# Mock dependencies
+
 @pytest.fixture
 def mock_db():
     """Create a mock database session"""
@@ -88,7 +88,6 @@ def mock_ticket():
     return ticket
 
 
-# Override the dependency
 @pytest.fixture(autouse=True)
 def app():
     """Setup FastAPI test client with mocked dependencies"""
@@ -103,21 +102,16 @@ class TestAdminPanel:
     @patch("server.routers.admin_panel.get_session")
     @patch("server.routers.admin_panel.get_current_user_from_cookie")
     async def test_check_qr_success(self, mock_get_current_user, mock_get_session, mock_db, mock_admin_user, mock_reservation):
-        """Test successful QR code verification"""
-        # Setup mocks
         mock_get_current_user.return_value = mock_admin_user
         mock_get_session.return_value = mock_db
-        
-        # Mock database query for reservation - use MagicMock instead of AsyncMock for query results
+
         first_result = MagicMock()
         first_result.scalars.return_value.first.side_effect = [mock_reservation, mock_admin_user]
         mock_db.execute.return_value = first_result
-        
-        # Execute
+
         reservation_id = mock_reservation.id
         result = await router.routes[0].endpoint(reservation_id, mock_admin_user, mock_db)
-        
-        # Assert
+
         assert mock_reservation.status == "success"
         assert mock_db.commit.called
 
@@ -125,12 +119,9 @@ class TestAdminPanel:
     @patch("server.routers.admin_panel.get_session")
     @patch("server.routers.admin_panel.get_current_user_from_cookie")
     async def test_check_qr_not_admin(self, mock_get_current_user, mock_get_session, mock_db, mock_regular_user):
-        """Test QR code verification fails for non-admin"""
-        # Setup mocks
         mock_get_current_user.return_value = mock_regular_user
         mock_get_session.return_value = mock_db
-        
-        # Execute and assert
+
         reservation_id = uuid4()
         with pytest.raises(HTTPException) as exc:
             await router.routes[0].endpoint(reservation_id, mock_regular_user, mock_db)
@@ -142,17 +133,13 @@ class TestAdminPanel:
     @patch("server.routers.admin_panel.get_session")
     @patch("server.routers.admin_panel.get_current_user_from_cookie")
     async def test_check_qr_reservation_not_found(self, mock_get_current_user, mock_get_session, mock_db, mock_admin_user):
-        """Test QR code verification when reservation not found"""
-        # Setup mocks
         mock_get_current_user.return_value = mock_admin_user
         mock_get_session.return_value = mock_db
-        
-        # Mock database query - no reservation found - use MagicMock
+
         result_mock = MagicMock()
         result_mock.scalars.return_value.first.return_value = None
         mock_db.execute.return_value = result_mock
-        
-        # Execute and assert
+
         reservation_id = uuid4()
         with pytest.raises(HTTPException) as exc:
             await router.routes[0].endpoint(reservation_id, mock_admin_user, mock_db)
@@ -164,21 +151,16 @@ class TestAdminPanel:
     @patch("server.routers.admin_panel.get_session")
     @patch("server.routers.admin_panel.get_current_user_from_cookie")
     async def test_verify_user_success(self, mock_get_current_user, mock_get_session, mock_db, mock_admin_user, mock_regular_user):
-        """Test successful user verification"""
-        # Setup mocks
         mock_get_current_user.return_value = mock_admin_user
         mock_get_session.return_value = mock_db
-        
-        # Mock database query - use MagicMock
+
         result_mock = MagicMock()
         result_mock.scalars.return_value.first.return_value = mock_regular_user
         mock_db.execute.return_value = result_mock
-        
-        # Execute
+
         user_id = mock_regular_user.id
         result = await router.routes[1].endpoint(user_id, mock_admin_user, mock_db)
-        
-        # Assert
+
         assert mock_regular_user.verified is True
         assert mock_db.commit.called
 
@@ -186,12 +168,9 @@ class TestAdminPanel:
     @patch("server.routers.admin_panel.get_session")
     @patch("server.routers.admin_panel.get_current_user_from_cookie")
     async def test_verify_user_not_admin(self, mock_get_current_user, mock_get_session, mock_db, mock_regular_user):
-        """Test user verification fails for non-admin"""
-        # Setup mocks
         mock_get_current_user.return_value = mock_regular_user
         mock_get_session.return_value = mock_db
-        
-        # Execute and assert
+
         user_id = uuid4()
         with pytest.raises(HTTPException) as exc:
             await router.routes[1].endpoint(user_id, mock_regular_user, mock_db)
@@ -204,24 +183,18 @@ class TestAdminPanel:
     @patch("server.routers.admin_panel.get_current_user_from_cookie")
     @patch("server.routers.admin_panel.ReservationRepository")
     async def test_delete_reservation_success(self, mock_repo, mock_get_current_user, mock_get_session, mock_db, mock_admin_user, mock_reservation):
-        """Test successful reservation deletion"""
-        # Setup mocks
         mock_get_current_user.return_value = mock_admin_user
         mock_get_session.return_value = mock_db
-        
-        # Mock repository
+
         mock_repo.return_value.update_statuses = AsyncMock()
-        
-        # Mock database query - use MagicMock
+
         result_mock = MagicMock()
         result_mock.scalars.return_value.first.return_value = mock_reservation
         mock_db.execute.return_value = result_mock
-        
-        # Execute
+
         reservation_id = mock_reservation.id
         response = await router.routes[2].endpoint(reservation_id, mock_admin_user, mock_db)
-        
-        # Assert
+
         mock_repo.return_value.update_statuses.assert_called_once()
         mock_db.delete.assert_called_once_with(mock_reservation)
         mock_db.commit.assert_called_once()
@@ -232,24 +205,18 @@ class TestAdminPanel:
     @patch("server.routers.admin_panel.get_current_user_from_cookie")
     @patch("server.routers.admin_panel.ReservationRepository")
     async def test_delete_reservation_not_found(self, mock_repo, mock_get_current_user, mock_get_session, mock_db, mock_admin_user):
-        """Test reservation deletion when reservation not found"""
-        # Setup mocks
         mock_get_current_user.return_value = mock_admin_user
         mock_get_session.return_value = mock_db
-        
-        # Mock repository
+
         mock_repo.return_value.update_statuses = AsyncMock()
-        
-        # Mock database query - no reservation found - use MagicMock
+
         result_mock = MagicMock()
         result_mock.scalars.return_value.first.return_value = None
         mock_db.execute.return_value = result_mock
-        
-        # Execute
+
         reservation_id = uuid4()
         response = await router.routes[2].endpoint(reservation_id, mock_admin_user, mock_db)
-        
-        # Assert
+
         assert response.status_code == 204
         mock_db.delete.assert_not_called()
 
@@ -259,32 +226,24 @@ class TestAdminPanel:
     @patch("server.routers.admin_panel.ReservationRepository")
     @patch("server.routers.admin_panel.make_timezone_naive")
     async def test_update_reservation_success(self, mock_make_naive, mock_repo, mock_get_current_user, mock_get_session, mock_db, mock_admin_user, mock_reservation):
-        """Test successful reservation update"""
-        # Setup mocks
         mock_get_current_user.return_value = mock_admin_user
         mock_get_session.return_value = mock_db
-        
-        # Mock repository
+
         mock_repo.return_value.update_statuses = AsyncMock()
-        
-        # Mock database query - use MagicMock
+
         result_mock = MagicMock()
         result_mock.scalars.return_value.first.return_value = mock_reservation
         mock_db.execute.return_value = result_mock
-        
-        # Mock make_timezone_naive
+
         mock_make_naive.side_effect = lambda x: x
-        
-        # Create update data
+
         new_start = datetime.now(timezone.utc)
         new_end = datetime.now(timezone.utc)
         update_data = ReservationUpdate(start=new_start, end=new_end, status="active")
-        
-        # Execute
+
         reservation_id = mock_reservation.id
         result = await router.routes[3].endpoint(reservation_id, update_data, mock_admin_user, mock_db)
-        
-        # Assert
+
         mock_repo.return_value.update_statuses.assert_called_once()
         mock_make_naive.assert_any_call(new_start)
         mock_make_naive.assert_any_call(new_end)
@@ -298,26 +257,20 @@ class TestAdminPanel:
     @patch("server.routers.admin_panel.ReservationManager")
     @patch("server.routers.admin_panel.ReservationRepository")
     async def test_create_reservation_success(self, mock_repo, mock_manager, mock_get_current_user, mock_get_session, mock_db, mock_admin_user, mock_reservation):
-        """Test successful reservation creation"""
-        # Setup mocks
         mock_get_current_user.return_value = mock_admin_user
         mock_get_session.return_value = mock_db
-        
-        # Mock repository and manager
+
         mock_repo.return_value.update_statuses = AsyncMock()
         mock_manager.return_value.create_reservation = AsyncMock(return_value=mock_reservation)
-        
-        # Create reservation data
+
         user_id = uuid4()
         seat_id = uuid4()
         start = datetime.now(timezone.utc)
         end = datetime.now(timezone.utc)
         reservation_data = ReservationCreate(user_id=user_id, seat_id=seat_id, start=start, end=end)
-        
-        # Execute
+
         result = await router.routes[4].endpoint(reservation_data, mock_admin_user, mock_db)
-        
-        # Assert
+
         mock_repo.return_value.update_statuses.assert_called_once()
         mock_manager.return_value.create_reservation.assert_called_once_with(
             str(user_id), start, end, str(seat_id)
@@ -330,28 +283,21 @@ class TestAdminPanel:
     @patch("server.routers.admin_panel.ReservationManager")
     @patch("server.routers.admin_panel.ReservationRepository")
     async def test_get_reservations_success(self, mock_repo, mock_manager, mock_get_current_user, mock_get_session, mock_db, mock_admin_user, mock_reservation, mock_seat):
-        """Test getting all reservations"""
-        # Setup mocks
         mock_get_current_user.return_value = mock_admin_user
         mock_get_session.return_value = mock_db
-        
-        # Mock repository
+
         mock_repo.return_value.update_statuses = AsyncMock()
-        
-        # Mock database queries with proper MagicMock structure
+
         all_reservations_result = MagicMock()
         all_reservations_result.scalars.return_value.all.return_value = [mock_reservation, MagicMock()]
         
         seat_query_result = MagicMock()
         seat_query_result.scalars.return_value.first.return_value = mock_seat
-        
-        # Configure mock_db.execute to return different results based on subsequent calls
+
         mock_db.execute.side_effect = [all_reservations_result, seat_query_result, seat_query_result]
-        
-        # Execute
+
         result = await router.routes[6].endpoint(mock_admin_user, mock_db)
-        
-        # Assert
+
         mock_repo.return_value.update_statuses.assert_called_once()
         result_list = list(result)
         assert len(result_list) == 2
@@ -364,27 +310,21 @@ class TestAdminPanel:
     @patch("server.routers.admin_panel.get_current_user_from_cookie")
     @patch("server.routers.admin_panel.TicketRepository")
     async def test_get_all_tickets(self, mock_ticket_repo, mock_get_current_user, mock_get_session, mock_db, mock_admin_user, mock_ticket, mock_seat):
-        """Test getting all tickets"""
-        # Setup mocks
         mock_get_current_user.return_value = mock_admin_user
         mock_get_session.return_value = mock_db
-        
-        # Mock repository
+
         tickets = [mock_ticket, MagicMock()]
-        # Use MagicMock for query result
+
         get_tickets_result = MagicMock()
         get_tickets_result.scalars.return_value.all.return_value = tickets
         mock_ticket_repo.return_value.get_tickets = AsyncMock(return_value=get_tickets_result)
-        
-        # Mock database query for seat - use MagicMock
+
         seat_result = MagicMock()
         seat_result.scalars.return_value.first.return_value = mock_seat
         mock_db.execute.return_value = seat_result
-        
-        # Execute
+
         result = await router.routes[7].endpoint(mock_admin_user, mock_db)
-        
-        # Assert
+
         mock_ticket_repo.return_value.get_tickets.assert_called_once()
         assert len(result) == len(tickets)
         for ticket in result:
@@ -394,21 +334,16 @@ class TestAdminPanel:
     @patch("server.routers.admin_panel.get_session")
     @patch("server.routers.admin_panel.get_current_user_from_cookie")
     async def test_get_all_users(self, mock_get_current_user, mock_get_session, mock_db, mock_admin_user):
-        """Test getting all users"""
-        # Setup mocks
         mock_get_current_user.return_value = mock_admin_user
         mock_get_session.return_value = mock_db
-        
-        # Mock database query - use MagicMock
+
         result_mock = MagicMock()
         users = [mock_admin_user, MagicMock(), MagicMock()]
         result_mock.scalars.return_value.all.return_value = users
         mock_db.execute.return_value = result_mock
-        
-        # Execute
+
         result = await router.routes[8].endpoint(mock_admin_user, mock_db)
-        
-        # Assert
+
         assert result == users
         mock_db.execute.assert_called_once()
 
@@ -417,24 +352,18 @@ class TestAdminPanel:
     @patch("server.routers.admin_panel.get_current_user_from_cookie")
     @patch("server.routers.admin_panel.UserRepository")
     async def test_update_user_success(self, mock_user_repo, mock_get_current_user, mock_get_session, mock_db, mock_admin_user, mock_regular_user):
-        """Test successful user update"""
-        # Setup mocks
         mock_get_current_user.return_value = mock_admin_user
         mock_get_session.return_value = mock_db
-        
-        # Mock repository methods
+
         mock_user_repo.return_value.get_by_id = AsyncMock(return_value=mock_regular_user)
-        mock_user_repo.return_value.get_by_email = AsyncMock(return_value=None)  # No user with same email
+        mock_user_repo.return_value.get_by_email = AsyncMock(return_value=None)
         mock_user_repo.return_value.update_user = AsyncMock(return_value=mock_regular_user)
-        
-        # Create update data
+
         update_data = UserUpdateAdmin(first_name="Updated Name", role="admin", email="updated@example.com")
-        
-        # Execute
+
         user_id = mock_regular_user.id
         result = await router.routes[9].endpoint(user_id, update_data, mock_admin_user, mock_db)
-        
-        # Assert
+
         mock_user_repo.return_value.get_by_id.assert_called_once_with(user_id)
         mock_user_repo.return_value.update_user.assert_called_once()
         assert result == mock_regular_user
@@ -444,22 +373,16 @@ class TestAdminPanel:
     @patch("server.routers.admin_panel.get_current_user_from_cookie")
     @patch("server.routers.admin_panel.TicketRepository")
     async def test_update_ticket_status(self, mock_ticket_repo, mock_get_current_user, mock_get_session, mock_db, mock_admin_user, mock_ticket):
-        """Test updating ticket status"""
-        # Setup mocks
         mock_get_current_user.return_value = mock_admin_user
         mock_get_session.return_value = mock_db
-        
-        # Mock repository
+
         mock_ticket_repo.return_value.update_ticket_status = AsyncMock(return_value=mock_ticket)
-        
-        # Create update data
+
         ticket_id = mock_ticket.id
         status_update = TicketStatusUpdate(status="resolved")
-        
-        # Execute
+
         result = await router.routes[10].endpoint(ticket_id, status_update, mock_admin_user, mock_db)
-        
-        # Assert
+
         mock_ticket_repo.return_value.update_ticket_status.assert_called_once_with(ticket_id, status_update.status)
         assert result == mock_ticket
 
@@ -468,24 +391,18 @@ class TestAdminPanel:
     @patch("server.routers.admin_panel.get_current_user_from_cookie")
     @patch("server.routers.admin_panel.ImageStorage")
     async def test_upload_default_avatar(self, mock_image_storage_cls, mock_get_current_user, mock_get_session, mock_db, mock_admin_user):
-        """Test uploading default avatar"""
-        # Setup mocks
         mock_get_current_user.return_value = mock_admin_user
         mock_get_session.return_value = mock_db
-        
-        # Mock image storage
+
         mock_image_storage = MagicMock()
         mock_image_storage_cls.return_value = mock_image_storage
         mock_image_storage.upload_default_avatar.return_value = "avatar123.jpg"
         mock_image_storage.get_image_url.return_value = "http://example.com/avatar123.jpg"
-        
-        # Create mock file
+
         mock_file = MagicMock()
-        
-        # Execute
+
         result = await router.routes[11].endpoint(mock_file, mock_admin_user)
-        
-        # Assert
+
         mock_image_storage.upload_default_avatar.assert_called_once_with(mock_file)
         mock_image_storage.get_image_url.assert_called_once_with("avatar123.jpg")
         assert result == {"image_id": "avatar123.jpg", "url": "http://example.com/avatar123.jpg"}

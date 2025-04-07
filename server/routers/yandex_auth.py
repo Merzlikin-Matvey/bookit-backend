@@ -22,7 +22,7 @@ CLIENT_SECRET = os.getenv("YANDEX_CLIENT_SECRET")
 REDIRECT_URI = os.getenv("YANDEX_REDIRECT_URI")
 FRONTEND_CALLBACK_URL = os.getenv("FRONTEND_CALLBACK_URL")
 if not CLIENT_ID or not CLIENT_SECRET or not REDIRECT_URI or not FRONTEND_CALLBACK_URL:
-    raise Exception("Отсутствуют необходимые переменные окружения для Яндекс OAuth.")
+    print("Отсутствуют необходимые переменные окружения для Яндекс OAuth.")
 
 YANDEX_AUTHORIZE_URL = "https://oauth.yandex.ru/authorize"
 YANDEX_TOKEN_URL = "https://oauth.yandex.ru/token"

@@ -37,4 +37,3 @@ class TestAuth:
         
         assert auth_service.verify_password("wrong_password", hashed) is False
 
-    

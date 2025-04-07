@@ -15,7 +15,6 @@ def auth_service():
 
 
 class TestAuth:
-
     def test_password_hashing(self, auth_service):
         """Test that password hashing works"""
         password = "testpassword123"

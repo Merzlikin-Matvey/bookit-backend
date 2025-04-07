@@ -3,8 +3,6 @@ import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
 import asyncio
 from server.backend.database import get_session, DATABASE_URL, Base
-from server.backend.database import DATABASE_URL
-from server.backend.database import DATABASE_URL
 import importlib
 
 
